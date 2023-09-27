@@ -8,12 +8,12 @@ import org.apache.spark.sql.types.{StructType,StructField, StringType, IntegerTy
 
 val pitStopsSchema = StructType(Array(
     StructField("driverId", IntegerType, false),
-    StructField("duration", DoubleType, true),
+    StructField("duration", StringType, true),
     StructField("lap", IntegerType, true),
     StructField("milliseconds", LongType, true),
     StructField("raceId", IntegerType, true),
     StructField("stop", IntegerType, true),
-    StructField("time", TimestampType, true)
+    StructField("time", StringType, true)
   ))
 
 // COMMAND ----------
@@ -29,22 +29,10 @@ df.show(10)
 
 // COMMAND ----------
 
-df.describe().show()
-
-// COMMAND ----------
-
 import org.apache.spark.sql.functions.{current_timestamp}
 
-df = df.withColumnRenamed("constructorId", "constructor_id")
-       .withColumnRenamed("driverId", "driver_d")
-       .withColumnRenamed("fastestLap", "fastest_lap")
-       .withColumnRenamed("fastestLapSpeed", "fastest_lap_speed")
-       .withColumnRenamed("fastestLapTime", "fastest_lap_time")
-       .withColumnRenamed("positionOrder", "position_order")
-       .withColumnRenamed("positionText", "position_text")
+df = df.withColumnRenamed("driverId", "driver_d")
        .withColumnRenamed("raceId", "race_id")
-       .withColumnRenamed("resultId", "result_id")
-       .withColumnRenamed("statusId", "status_id")
        .withColumn("ingestion_date", current_timestamp())
 
 
@@ -56,12 +44,8 @@ df.show()
 
 // MAGIC %md
 // MAGIC
-// MAGIC #### Repartition by year and Write to datalake as Parquet 
+// MAGIC #### Write to datalake as Parquet 
 
 // COMMAND ----------
 
-df.write.mode("overwrite").partitionBy("race_id").parquet("dbfs:/mnt/kchirchir/formulaone/processed/results")
-
-// COMMAND ----------
-
-display(dbutils.fs.ls("dbfs:/mnt/kchirchir/formulaone/processed/results"))
+df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/pit_stops")
