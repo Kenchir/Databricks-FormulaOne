@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest circuits.csv files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/common_functions"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/configuration"
 
 // COMMAND ----------
 
@@ -21,7 +25,7 @@ val circuitsSchema = StructType(Array(
 
 var df = spark.read.option("header", "true")
                     .schema(circuitsSchema)
-                    .csv("dbfs:/mnt/kchirchir/formulaone/raw/races.csv")
+                    .csv(s"$raw_dir/races.csv")
 
 df.show(5)
 
@@ -34,9 +38,9 @@ df = df.withColumnRenamed("raceId", "race_id")
        .withColumnRenamed("circuitId", "circuit_id")
        .withColumnRenamed("year", "race_year")
        .withColumn("race_timestamp", to_timestamp(concat(col("date"), lit(" "), col("time")), "yyyy-MM-dd HH:mm:ss"))
-       .withColumn("ingestion_date", current_timestamp())
        .drop("date", "time", "url")
 
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -50,8 +54,8 @@ df.describe().show()
 
 // COMMAND ----------
 
-df.repartition(col("race_year")).write.mode("overwrite").partitionBy("race_year").parquet("dbfs:/mnt/kchirchir/formulaone/processed/races")
+df.repartition(col("race_year")).write.mode("overwrite").partitionBy("race_year").parquet(s"$processed_dir/races")
 
 // COMMAND ----------
 
-dbutils.fs.rm("dbfs:/mnt/kchirchir/formulaone/processed/races", true)
+dbutils.notebook.exit("SUCCESS")

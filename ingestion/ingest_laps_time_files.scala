@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest lap_times.csv files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/common_functions"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/configuration"
 
 // COMMAND ----------
 
@@ -22,17 +26,14 @@ val lapTimesSchema = StructType(Array(
 var df = spark.read.schema(lapTimesSchema)
                    .option("Header", false)
                    .option("recursiveFileLookup","true")
-                   .csv("dbfs:/mnt/kchirchir/formulaone/raw/lap_times")
+                   .csv(s"$raw_dir/lap_times")
 
 df.show(10)
 
 
 // COMMAND ----------
 
-import org.apache.spark.sql.functions.{current_timestamp}
-
-df = df.withColumn("ingestion_date", current_timestamp())
-
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -42,4 +43,8 @@ df = df.withColumn("ingestion_date", current_timestamp())
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/lap_times")
+df.write.mode("overwrite").parquet(s"$processed_dir/lap_times")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")

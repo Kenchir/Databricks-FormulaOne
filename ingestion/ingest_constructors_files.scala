@@ -1,6 +1,14 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest circuits.csv files
-display(dbutils.fs.ls("/mnt/kchirchir/formulaone/raw"))
+// MAGIC %run "../includes/configuration"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/common_functions"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/common_functions"
 
 // COMMAND ----------
 
@@ -16,7 +24,7 @@ val constructorsSchema = StructType(Array(
 
 // COMMAND ----------
 
-var df = spark.read.schema(constructorsSchema).json("dbfs:/mnt/kchirchir/formulaone/raw/constructors.json")
+var df = spark.read.schema(constructorsSchema).json(s"$raw_dir/constructors.json")
 
 df.show(5)
 
@@ -27,9 +35,8 @@ import org.apache.spark.sql.functions.{current_timestamp}
 
 df = df.withColumnRenamed("constructorId", "constructor_id")
        .withColumnRenamed("constructorRef", "constructor_ref")
-       .withColumn("ingestion_date", current_timestamp())
        .drop("url")
-
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -39,4 +46,8 @@ df = df.withColumnRenamed("constructorId", "constructor_id")
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/constructors")
+df.write.mode("overwrite").parquet(s"$processed_dir/constructors")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")

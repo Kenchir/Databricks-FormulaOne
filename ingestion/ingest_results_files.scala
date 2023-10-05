@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest results.json files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/common_functions"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/configuration"
 
 // COMMAND ----------
 
@@ -30,7 +34,7 @@ val resultsSchema = StructType(Array(
 // COMMAND ----------
 
 var df = spark.read.schema(resultsSchema)
-                   .json("dbfs:/mnt/kchirchir/formulaone/raw/results.json")
+                   .json(s"$raw_dir/results.json")
 
 // df.show(5)
 
@@ -49,12 +53,8 @@ df = df.withColumnRenamed("constructorId", "constructor_id")
        .withColumnRenamed("raceId", "race_id")
        .withColumnRenamed("resultId", "result_id")
        .withColumnRenamed("statusId", "status_id")
-       .withColumn("ingestion_date", current_timestamp())
 
-
-// COMMAND ----------
-
-df.show()
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -64,8 +64,8 @@ df.show()
 
 // COMMAND ----------
 
-df.write.mode("overwrite").partitionBy("race_id").parquet("dbfs:/mnt/kchirchir/formulaone/processed/results")
+df.write.mode("overwrite").partitionBy("race_id").parquet(s"$processed_dir/results")
 
 // COMMAND ----------
 
-display(dbutils.fs.ls("dbfs:/mnt/kchirchir/formulaone/processed/results"))
+dbutils.notebook.exit("SUCCESS")

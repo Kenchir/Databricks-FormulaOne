@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest pit_stops.json files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/common_functions"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/configuration"
 
 // COMMAND ----------
 
@@ -22,7 +26,7 @@ val pitStopsSchema = StructType(Array(
 
 var df = spark.read.schema(pitStopsSchema)
                    .option("multiLine", true)
-                   .json("dbfs:/mnt/kchirchir/formulaone/raw/pit_stops.json")
+                   .json(s"$raw_dir/pit_stops.json")
 
 df.show(10)
 
@@ -33,12 +37,7 @@ import org.apache.spark.sql.functions.{current_timestamp}
 
 df = df.withColumnRenamed("driverId", "driver_d")
        .withColumnRenamed("raceId", "race_id")
-       .withColumn("ingestion_date", current_timestamp())
-
-
-// COMMAND ----------
-
-df.show()
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -48,4 +47,8 @@ df.show()
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/pit_stops")
+df.write.mode("overwrite").parquet(s"$processed_dir/pit_stops")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")

@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest qualifying.json files
+// MAGIC %run "../includes/common_functions"
 
+// COMMAND ----------
+
+// MAGIC %run "../includes/configuration"
 
 // COMMAND ----------
 
@@ -25,20 +29,19 @@ val qualifySchema = StructType(Array(
 var df = spark.read.schema(qualifySchema)
                    .option("MultiLine", true)
                    .option("recursiveFileLookup","true")
-                   .json("dbfs:/mnt/kchirchir/formulaone/raw/qualifying")
+                   .json(s"$raw_dir/qualifying")
 
 df.show(10)
 
 
 // COMMAND ----------
 
-import org.apache.spark.sql.functions.{current_timestamp}
-
 df = df.withColumnRenamed("raceId", "race_id")
        .withColumnRenamed("driverId", "driver_id")
        .withColumnRenamed("constructorId", "constructor_id")
        .withColumnRenamed("qualifyId", "qualify_id")
-       .withColumn("ingestion_date", current_timestamp())
+
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -48,4 +51,8 @@ df = df.withColumnRenamed("raceId", "race_id")
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/qualifying")
+df.write.mode("overwrite").parquet(s"$processed_dir/qualifying")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")

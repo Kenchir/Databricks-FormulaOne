@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest circuits.csv files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/configuration"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/common_functions"
 
 // COMMAND ----------
 
@@ -22,7 +26,7 @@ val circuitsSchema = StructType(Array(
 
 var df = spark.read.option("header", "true")
                     .schema(circuitsSchema)
-                    .csv("dbfs:/mnt/kchirchir/formulaone/raw/circuits.csv")
+                    .csv(s"$raw_dir/circuits.csv")
 
 df.show(5)
 
@@ -44,9 +48,7 @@ df = df.withColumnRenamed("circuitId", "circuit_id")
 // COMMAND ----------
 
 import org.apache.spark.sql.functions.current_timestamp
-df = df.withColumn("ingestion_date", current_timestamp())
-
-df.show(5, false)
+df = addIngestionDate(df)
 
 // COMMAND ----------
 
@@ -56,4 +58,8 @@ df.show(5, false)
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/circuits")
+df.write.mode("overwrite").parquet(s"$processed_dir/circuits")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")

@@ -1,6 +1,10 @@
 // Databricks notebook source
 // DBTITLE 1, Ingest divers.csv files
-display(dbutils.fs.mounts())
+// MAGIC %run "../includes/configuration"
+
+// COMMAND ----------
+
+// MAGIC %run "../includes/common_functions"
 
 // COMMAND ----------
 
@@ -23,7 +27,7 @@ val driversSchema = StructType(Array(
 
 // COMMAND ----------
 
-var df = spark.read.schema(driversSchema).json("dbfs:/mnt/kchirchir/formulaone/raw/drivers.json")
+var df = spark.read.schema(driversSchema).json(s"$raw_dir/drivers.json")
 
 df.show(5)
 
@@ -43,8 +47,8 @@ import org.apache.spark.sql.functions.{current_timestamp, concat_ws, to_timestam
 df = df.withColumnRenamed("driverId", "driver_id")
        .withColumnRenamed("driverref", "driver_ref")
        .withColumn("name", concat_ws(" ",col("name.forename"),col("name.surname")))
-       .withColumn("ingestion_date", current_timestamp)
        .drop("url")
+df = addIngestionDate(df)
 
 
 // COMMAND ----------
@@ -55,4 +59,12 @@ df = df.withColumnRenamed("driverId", "driver_id")
 
 // COMMAND ----------
 
-df.write.mode("overwrite").parquet("dbfs:/mnt/kchirchir/formulaone/processed/drivers")
+df.write.mode("overwrite").parquet(s"$processed_dir/drivers")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")
+
+// COMMAND ----------
+
+dbutils.notebook.exit("SUCCESS")
